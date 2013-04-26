@@ -13,7 +13,7 @@ import org.aifgi.crawler.api.PageHandler
  * @author aifgi
  */
 
-private val LINK = Pattern.compile(".*<a.*href\\s*=\\s*[\"\']([\\w\\s\\./\\?=]+)[\"\'].*>(.*)</a>.*")!!
+private val LINK = Pattern.compile(".*<a.*href\\s*=\\s*[\"\']([\\w\\s\\./\\?=]+)[\"\'].*>(.*)</a>.*")
 
 public class LinkSearcher(val linkHolder: LinkHolder): PageHandler {
     public override fun handle(page: Page) {
