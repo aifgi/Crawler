@@ -12,13 +12,20 @@ import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.File
 import java.io.InputStream
+import org.aifgi.crawler.api.PageLoader
+import org.aifgi.crawler.api.Filter
+import java.io.IOException
+import org.aifgi.crawler.api.CrawlerException
+import java.util.logging.Logger
 
 /**
  * @author aifgi
  */
 public object CrawlerFacade {
-    public val linkHolder: LinkHolder = LinkHolderImpl()
+    private val log = Logger.getLogger("CrawlerFacade")
+    private val linkHolder = LinkHolderImpl()
     private val searcher = LinkSearcher(linkHolder)
+    private val loader = PageLoaderImpl()
     private val saver: PageSaver
 
     {
@@ -27,25 +34,29 @@ public object CrawlerFacade {
         saver = PageSaver(dir)
     }
 
-    public fun loadPage(url: URL): Page {
-        val connection = url.openConnection()!!
-        val inputStream = connection.getInputStream()!!
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        val list = ArrayList<String>()
-        var line = reader.readLine()
-        while (line != null) {
-            list.add(line!!)
-            line = reader.readLine()
+    public fun addLink(url: URL) {
+        linkHolder.addLink(url)
+    }
+
+    public fun addUrlFilter(filter: Filter<URL>) {
+        linkHolder.addFilter(filter)
+    }
+
+    public fun processNextPage() {
+        val url = linkHolder.next()
+        try {
+            processPage(url)
         }
-        return PageImpl(url, list)
+        catch(e: IOException) {
+            throw CrawlerException(url, "Error while crawling page", e)
+        }
     }
 
-    public fun search(page: Page) {
-        val res = searcher.handle(page)
-        return res
-    }
-
-    public fun save(page: Page) {
+    private fun processPage(url: URL) {
+        log.info("Process page: ${url}")
+        val page = loader.loadPage(url)
+        searcher.handle(page)
         saver.handle(page)
+        log.info("Page ${url} successfully processed")
     }
 }

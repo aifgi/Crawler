@@ -8,11 +8,13 @@ import org.aifgi.crawler.api.Filter
 import java.util.HashSet
 import java.util.ArrayList
 import java.util.LinkedList
+import java.util.logging.Logger
 
 /**
  * @author aifgi
  */
 public class LinkHolderImpl: LinkHolder {
+    private val log = Logger.getLogger("LinkHolder")
     private val filters = ArrayList<Filter<URL>>()
     private val known = HashSet<URL>()
     private val links = ArrayList<URL>()
@@ -25,6 +27,7 @@ public class LinkHolderImpl: LinkHolder {
                 lock.lock()
                 try {
                     if (!known.contains(url)) {
+                        log.info("Adding url to holder: ${url}")
                         links.add(url)
                         notEmpty.signal()
                         known.add(url)
@@ -54,7 +57,9 @@ public class LinkHolderImpl: LinkHolder {
             while (links.isEmpty()) {
                 notEmpty.await()
             }
-            return links.remove(links.size - 1)
+            val url = links.remove(links.size - 1)
+            log.info("Getting url from holder: ${url}")
+            return url
         }
         finally {
             lock.unlock()
